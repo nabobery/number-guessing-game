@@ -71,13 +71,11 @@ Congratulations! You guessed the correct number in 4 attempts.
 - Multiple difficulty levels (easy, medium, hard)
 - Feedback on guesses (higher or lower)
 - Tracks the number of attempts
-
-## Future Enhancements
-
 - Allow multiple rounds of the game.
 - Add a timer to track how long it takes to guess the number.
-- Implement a hint system.
-- Keep track of high scores for each difficulty level.
+- Implemented a hint system.
+- Tracks high scores for each difficulty level.
+
 
 ## Contributing
 

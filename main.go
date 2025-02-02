@@ -25,12 +25,18 @@ func (d Difficulty) Attempts() int {
 
 func main() {
 	fmt.Println("Welcome to the Number Guessing Game!")
-	fmt.Println("I'm thinking of a number between 1 and 100.")
+	for {
+		fmt.Println("I'm thinking of a number between 1 and 100.")
+		difficulty := chooseDifficulty()
+		fmt.Printf("Great! You have selected the %s difficulty level.\n", difficulty)
 
-	difficulty := chooseDifficulty()
-	fmt.Printf("Great! You have selected the %s difficulty level.\n", difficulty)
+		playGame(difficulty)
 
-	playGame(difficulty)
+		if !playAgain() {
+			break
+		}
+	}
+	fmt.Println("Thanks for playing!")
 }
 
 func chooseDifficulty() Difficulty {
@@ -58,27 +64,85 @@ func playGame(difficulty Difficulty) {
 	secretNumber := random.Intn(100) + 1
 	attempts := difficulty.Attempts()
 	fmt.Println("Let's start the game!")
-
-	for attempt := 1; attempt <= attempts; attempt++ {
+	startTime := time.Now()
+	var guess int
+	var attempt int
+	for attempt = 1; attempt <= attempts; {
 		fmt.Printf("Attempt %d/%d. Enter your guess: ", attempt, attempts)
-		var guess int
 		_, err := fmt.Scanln(&guess)
 
 		if err != nil {
 			fmt.Println("Invalid input. Please enter a number.")
-			attempt-- // Decrement attempt to allow retry
 			continue
 		}
 
 		if guess == secretNumber {
-			fmt.Printf("Congratulations! You guessed the correct number in %d attempts.\n", attempt)
+			duration := time.Since(startTime)
+			fmt.Printf("Congratulations! You guessed the correct number in %d attempts and it took you %v.\n", attempt, duration)
+			updateHighScore(difficulty, attempt, duration)
 			return
 		} else if guess < secretNumber {
 			fmt.Printf("Incorrect! The number is greater than your guess: %d.\n", guess)
 		} else {
 			fmt.Printf("Incorrect! The number is less than your guess: %d.\n", guess)
 		}
+		attempt++
+		if attempt <= attempts && attempt%2 == 0 {
+			hint := provideHint(secretNumber, guess)
+			fmt.Printf("Hint: %s\n", hint)
+		}
 	}
 
 	fmt.Printf("You ran out of attempts. The correct number was %d.\n", secretNumber)
+}
+
+func playAgain() bool {
+	var choice string
+	for {
+		fmt.Print("Do you want to play again? (yes/no): ")
+		_, err := fmt.Scanln(&choice)
+		if err != nil {
+			fmt.Println("Invalid input. Please enter yes or no.")
+			continue
+		}
+		if choice == "yes" {
+			return true
+		} else if choice == "no" {
+			return false
+		} else {
+			fmt.Println("Invalid input. Please enter yes or no.")
+		}
+	}
+}
+
+func provideHint(secretNumber, guess int) string {
+	if secretNumber > guess {
+		return "The number is higher than your guess."
+	} else {
+		return "The number is lower than your guess."
+	}
+}
+
+var highScores = make(map[Difficulty]struct {
+	attempts int
+	duration time.Duration
+})
+
+func updateHighScore(difficulty Difficulty, attempts int, duration time.Duration) {
+	currentScore, ok := highScores[difficulty]
+	if !ok || attempts < currentScore.attempts || (attempts == currentScore.attempts && duration < currentScore.duration) {
+		highScores[difficulty] = struct {
+			attempts int
+			duration time.Duration
+		}{attempts, duration}
+		fmt.Println("New high score!")
+		printHighScores()
+	}
+}
+
+func printHighScores() {
+	fmt.Println("High Scores:")
+	for difficulty, score := range highScores {
+		fmt.Printf("%s: %d attempts in %v\n", difficulty, score.attempts, score.duration)
+	}
 }
